@@ -1,0 +1,218 @@
+{% load catalog_extras %}
+<div class="container-fluid">
+    {% if not products_to_import %}
+    <div class="card card-primary shadow-sm">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Importar Produtos de XML</h5>
+        </div>
+        <div class="card-body">
+            <form id="xml-upload-form" method="post" enctype="multipart/form-data" action="{% url 'upload-products-xml-page' %}">
+                {% csrf_token %}
+                <div class="alert alert-info border-0">
+                    <h6 class="mb-1">Entrada de Produtos via XML</h6>
+                    <p class="mb-2">
+                        Envie um arquivo XML (ex.: NFe) para extrair os produtos. Após a leitura, você poderá revisar e selecionar a categoria de cada um antes de salvar.
+                    </p>
+                    <ul class="mb-0 small">
+                        <li>O sistema irá pré-cadastrar os produtos com base nos dados do XML.</li>
+                        <li>Você <strong>deve</strong> selecionar uma categoria para cada produto na tela de pré-visualização.</li>
+                        <li>Produtos com o mesmo código serão atualizados. Novos produtos serão criados.</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="category_id" class="form-label">Categoria Padrão</label>
+                    <select class="form-select form-select-sm" id="category_id" name="category_id">
+                        <option value="">Selecione uma categoria padrão (opcional)</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">A categoria selecionada aqui será pré-selecionada para todos os produtos na tela de revisão.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="xml_file">Arquivo XML</label>
+                    <input type="file" class="form-control form-control-sm" id="xml_file" name="file" accept=".xml" required>
+                    <div class="form-text">
+                        Carregue o XML completo da nota fiscal para que os itens sejam pré-carregados.
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="mdi mdi-file-upload"></i> Pré-visualizar itens
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="card card-primary shadow-sm">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Revisão de Produtos do XML</h5>
+        </div>
+        <div class="card-body">
+            <div id="save-products-form">
+                {% csrf_token %}
+                <p class="small text-muted mb-2">
+                  Revise os produtos abaixo. Você <strong>deve</strong> selecionar uma categoria para cada produto antes de salvar.
+                </p>
+                <div class="table-responsive border rounded">
+                  <table class="table table-sm table-hover align-middle mb-0" id="xml-preview-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="min-width: 140px;">Código</th>
+                        <th style="min-width: 200px;">Nome</th>
+                        <th style="width: 110px;">Preço</th>
+                        <th style="width: 160px;">Custo</th>
+                        <th style="min-width: 160px;">Categoria</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products_to_import %}
+                        <tr data-product='{{ product|jsonify }}'>
+                            <td class="font-monospace small">{{ product.code }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>
+                                <input type="number"
+                                       class="form-control form-control-sm price-input"
+                                       step="0.01"
+                                       min="0"
+                                       style="min-width: 140px;"
+                                       value="{{ product.price_display }}">
+                            </td>
+                            <td>
+                                <input type="number"
+                                       class="form-control form-control-sm cost-input"
+                                       step="0.01"
+                                       min="0"
+                                       style="min-width: 140px;"
+                                       value="{{ product.cost_display }}">
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm category-select" required>
+                                    <option value="" disabled {% if not default_category_id %}selected{% endif %}>Selecione...</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category.id == default_category_id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="$('#uni_modal').modal('hide');">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="save-products-btn">
+                        <i class="mdi mdi-content-save"></i> Salvar Produtos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+$(function() {
+    // This handler is for the initial form submission to get the preview
+    $('#xml-upload-form').off('submit').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        start_loader();
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(resp) {
+                // The response is the rendered preview template, so we replace the modal body
+                $('#uni_modal .modal-body').html(resp);
+            },
+            error: function() {
+                alert('Ocorreu um erro ao pré-visualizar o arquivo.');
+            },
+            complete: function() {
+                end_loader();
+            }
+        });
+    });
+
+    // This handler is for the final "Save" button click
+    // It must be delegated because the button is loaded via AJAX
+    $(document).off('click', '#save-products-btn').on('click', '#save-products-btn', function(e) {
+        e.preventDefault();
+        
+        var products = [];
+        var isValid = true;
+
+        $('#xml-preview-table tbody tr').each(function() {
+            var row = $(this);
+            var productData = row.data('product');
+            var categoryId = row.find('select.category-select').val();
+            var priceValue = row.find('input.price-input').val();
+            var costValue = row.find('input.cost-input').val();
+
+            if (!categoryId) {
+                isValid = false;
+                row.find('select.category-select').addClass('is-invalid');
+            } else {
+                row.find('select.category-select').removeClass('is-invalid');
+            }
+            
+            productData.category_id = categoryId;
+            productData.price = priceValue ? parseFloat(priceValue) : productData.price;
+            productData.cost = costValue ? parseFloat(costValue) : productData.price;
+            products.push(productData);
+        });
+
+        if (!isValid) {
+            alert('Por favor, selecione uma categoria para todos os produtos.');
+            return;
+        }
+
+        var postData = {
+            products: products
+        };
+
+        start_loader();
+        $.ajax({
+            url: "{% url 'upload-products-xml-page' %}",
+            method: 'POST',
+            data: JSON.stringify(postData),
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            dataType: 'json',
+            success: function(resp) {
+                if(resp.status == 'success'){
+                    location.reload();
+                } else {
+                    alert(resp.msg || 'Ocorreu um erro ao salvar os produtos.');
+                }
+            },
+            error: function() {
+                alert('Ocorreu um erro de comunicação ao salvar os produtos.');
+            },
+            complete: function() {
+                end_loader();
+            }
+        });
+    });
+
+    // Simple JSON 'filter' for JS
+    var jsonify = function(obj) {
+        try {
+            // Replace single quotes with double quotes for valid JSON
+            return JSON.stringify(obj).replace(/'/g, '"');
+        } catch (e) {
+            return '{}';
+        }
+    };
+});
+</script>
