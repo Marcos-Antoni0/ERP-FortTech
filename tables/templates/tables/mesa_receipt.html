@@ -96,7 +96,11 @@
   <div class="thermal-wrapper" id="mesa-receipt">
       <div style="text-align: center; margin-bottom: 6px;">
         <h6>Recibo de Mesa</h6>
-        <small>Recibo Nao Fiscal</small>
+        <div>{{ sale.company.name|default:'Empresa' }}</div>
+        {% if sale.company.cnpj %}
+        <div style="font-size: 11px;">CNPJ: {{ sale.company.cnpj }}</div>
+        {% endif %}
+        <small>Recibo N&atilde;o Fiscal</small>
       </div>
 
       <hr class="thermal-divider" />
@@ -111,11 +115,11 @@
           <span>{{ order.table.number }}</span>
         </div>
         <div class="thermal-row">
-          <span>Codigo:</span>
+          <span>C&oacute;digo:</span>
           <span>{{ sale.code }}</span>
         </div>
         <div class="thermal-row">
-          <span>Garcom:</span>
+          <span>Gar&ccedil;om:</span>
           <span>{{ order.waiter_name|default:"-" }}</span>
         </div>
         <div class="thermal-row">
@@ -176,7 +180,7 @@
       </div>
       {% if order.service_charge %}
       <div class="thermal-row">
-        <span>Taxa de servico ({{ order.service_charge|floatformat:2 }}%)</span>
+        <span>Taxa de servi&ccedil;o ({{ order.service_charge|floatformat:2 }}%)</span>
         <span>R$ {{ order.service_amount|floatformat:2 }}</span>
       </div>
       {% endif %}

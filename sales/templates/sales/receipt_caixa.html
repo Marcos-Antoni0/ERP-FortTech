@@ -96,6 +96,10 @@
   <div class="thermal-wrapper" id="cash-receipt">
       <div style="text-align: center; margin-bottom: 6px;">
         <h6>{{ title }}</h6>
+        <div>{{ sale.company.name|default:'Empresa' }}</div>
+        {% if sale.company.cnpj %}
+        <div style="font-size: 11px;">CNPJ: {{ sale.company.cnpj }}</div>
+        {% endif %}
         <small>Recibo Não Fiscal</small>
       </div>
 
