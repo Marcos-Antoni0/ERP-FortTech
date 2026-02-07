@@ -2,186 +2,635 @@
 {% load humanize %}
 
 {% block pageContent %}
-<!-- Título -->
+<style>
+  .ft-report-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .ft-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .ft-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .ft-filter-card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 12px 30px rgba(17, 24, 39, 0.06);
+  }
+  .ft-filter-card .form-control {
+    border-radius: 10px;
+  }
+  .ft-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .ft-stat-card {
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 24px rgba(17, 24, 39, 0.08);
+  }
+  .ft-stat-card h5 {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+  }
+  .ft-stat-card h2 {
+    font-weight: 700;
+    font-size: 1.6rem;
+    margin: 0;
+  }
+  .ft-stat-card small,
+  .ft-stat-card p {
+    font-size: 0.85rem;
+    margin: 0;
+    opacity: 0.85;
+  }
+  .ft-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1rem;
+  }
+  .ft-chart-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 14px 28px rgba(17, 24, 39, 0.08);
+    position: relative;
+    min-height: 320px;
+  }
+  .ft-chart-card--compact {
+    min-height: 260px;
+  }
+  .ft-chart-card--fixed {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .ft-chart-card--wide {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .ft-chart-card h5 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  .ft-chart-card canvas {
+    width: 100% !important;
+    height: 220px !important;
+  }
+  .ft-chart-card--compact canvas {
+    height: 180px !important;
+  }
+  .ft-chart-card .ft-chart-note {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-top: 0.6rem;
+  }
+  .ft-chart-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 16px;
+  }
+  .ft-table-card {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+  }
+  .ft-table-card .card-header {
+    background: linear-gradient(120deg, #111827, #1f2937);
+  }
+  .ft-table-card .table thead th {
+    font-size: 0.85rem;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .ft-subtle {
+    color: #6b7280;
+  }
+  @media (max-width: 992px) {
+    .ft-chart-card {
+      min-height: 320px;
+    }
+  }
+</style>
+
 <div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
-  <h1 class="h4 fw-bold text-primary mb-3">
-    <i class="bi bi-bar-chart-line me-2"></i>{{ page_title }}
-  </h1>
-</div>
+  <div class="ft-report-wrap w-100">
+    <div class="ft-head">
+      <h1 class="h4 ft-title text-primary mb-0">
+        <i class="bi bi-bar-chart-line"></i>{{ page_title }}
+      </h1>
+    </div>
 
-<!-- Filtros + Exportar -->
-<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12 mb-4">
-  <form method="get" class="d-flex gap-2 align-items-end">
-    <div>
-      <label class="form-label fw-bold">Data Inicial</label>
-      <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+    <div class="ft-filter-card">
+      <form method="get" class="d-flex gap-3 align-items-end flex-wrap">
+        <div>
+          <label class="form-label fw-bold">Data Inicial</label>
+          <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        <div>
+          <label class="form-label fw-bold">Data Final</label>
+          <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">
+          <i class="bi bi-filter-circle me-1"></i>Filtrar
+        </button>
+        <a href="{% url 'export_sales_report' %}?start_date={{ start_date }}&end_date={{ end_date }}"
+           class="btn btn-success mt-2 ms-auto">
+          <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+        </a>
+      </form>
     </div>
-    <div>
-      <label class="form-label fw-bold">Data Final</label>
-      <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
-    </div>
-    <button type="submit" class="btn btn-primary mt-2">
-      <i class="bi bi-filter-circle me-1"></i>Filtrar
-    </button>
-    <a href="{% url 'export_sales_report' %}?start_date={{ start_date }}&end_date={{ end_date }}"
-       class="btn btn-success mt-2 ms-auto">
-      <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
-    </a>
-  </form>
-</div>
 
-<!-- Cards de Totais -->
-<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12 mb-4">
-  <div class="d-flex gap-3 flex-wrap">
-    <div class="card flex-fill text-white bg-primary p-3">
-      <h5>Total Itens Vendidos</h5>
-      <h2>{{ totals.total_quantity|stringformat:"0.2f" }}</h2>
-    </div>
-    <div class="card flex-fill text-white bg-success p-3">
-      <h5>Receita Total (R$)</h5>
-      <h2>{{ totals.total_revenue|floatformat:2|intcomma }}</h2>
-    </div>
-    <div class="card flex-fill text-white bg-secondary p-3">
-      <h5>Custos (R$)</h5>
-      <h2>{{ totals.total_cost|floatformat:2|intcomma }}</h2>
-    </div>
-    <div class="card flex-fill text-white bg-success p-3">
-      <h5>Lucro (R$)</h5>
-      <h2>{{ totals.total_profit|floatformat:2|intcomma }}</h2>
-    </div>
-    <div class="card flex-fill text-white bg-warning p-3">
-      <h5>Transações</h5>
-      <h2>{{ totals.total_tx }}</h2>
-    </div>
-    <div class="card flex-fill text-white bg-info p-3">
-      <h5>Ticket Médio (R$)</h5>
-      <h2>{{ totals.total_average_ticket|floatformat:2 }}</h2>
-    </div>
-    <div class="card flex-fill text-white bg-secondary p-3">
-      <h5>Taxas de Entrega (R$)</h5>
-      <h2>{{ totals.total_delivery_fee|floatformat:2|intcomma }}</h2>
-    </div>
-    <div class="card flex-fill text-white bg-danger p-3">
-      <h5>Saídas de Caixa (R$)</h5>
-      <h2>{{ totals.total_cash_exits|floatformat:2|intcomma }}</h2>
-    </div>
-    <div class="card flex-fill text-white {% if debt_cards.pending.overdue > 0 %}bg-danger{% else %}bg-info{% endif %} p-3">
-      <h5>Débitos Pendentes</h5>
-      <h2>R$ {{ debt_cards.pending.total|floatformat:2|intcomma }}</h2>
-      <p class="mb-1">{{ debt_cards.pending.clients|intcomma }} cliente(s) com débito.</p>
-      {% if debt_cards.pending.overdue > 0 %}
-      <span class="badge bg-warning text-dark">Vencidos: {{ debt_cards.pending.overdue }}</span>
-      {% endif %}
-      <div class="mt-2">
-        <a href="{% url 'debts-list' %}" class="btn btn-sm btn-outline-light">Ver débitos</a>
+    <div class="ft-stats-grid">
+      <div class="ft-stat-card text-white bg-primary">
+        <h5>Total Itens Vendidos</h5>
+        <h2>{{ totals.total_quantity|stringformat:"0.2f" }}</h2>
+      </div>
+      <div class="ft-stat-card text-white bg-success">
+        <h5>Receita Total (R$)</h5>
+        <h2>{{ totals.total_revenue|floatformat:2|intcomma }}</h2>
+      </div>
+      <div class="ft-stat-card text-white bg-secondary">
+        <h5>Custos (R$)</h5>
+        <h2>{{ totals.total_cost|floatformat:2|intcomma }}</h2>
+      </div>
+      <div class="ft-stat-card text-white bg-success">
+        <h5>Lucro (R$)</h5>
+        <h2>{{ totals.total_profit|floatformat:2|intcomma }}</h2>
+      </div>
+      <div class="ft-stat-card text-white bg-warning">
+        <h5>Transações</h5>
+        <h2>{{ totals.total_tx }}</h2>
+      </div>
+      <div class="ft-stat-card text-white bg-info">
+        <h5>Ticket Médio (R$)</h5>
+        <h2>{{ totals.total_average_ticket|floatformat:2 }}</h2>
+      </div>
+      <div class="ft-stat-card text-white bg-secondary">
+        <h5>Taxas de Entrega (R$)</h5>
+        <h2>{{ totals.total_delivery_fee|floatformat:2|intcomma }}</h2>
+      </div>
+      <div class="ft-stat-card text-white bg-danger">
+        <h5>Saídas de Caixa (R$)</h5>
+        <h2>{{ totals.total_cash_exits|floatformat:2|intcomma }}</h2>
+      </div>
+      <div class="ft-stat-card text-white {% if debt_cards.pending.overdue > 0 %}bg-danger{% else %}bg-info{% endif %}">
+        <div>
+          <h5>Débitos Pendentes</h5>
+          <h2>R$ {{ debt_cards.pending.total|floatformat:2|intcomma }}</h2>
+          <p class="mb-1">{{ debt_cards.pending.clients|intcomma }} cliente(s) com débito.</p>
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          {% if debt_cards.pending.overdue > 0 %}
+          <span class="badge bg-warning text-dark">Vencidos: {{ debt_cards.pending.overdue }}</span>
+          {% endif %}
+          <a href="{% url 'debts-list' %}" class="btn btn-sm btn-outline-light">Ver débitos</a>
+        </div>
+      </div>
+      <div class="ft-stat-card text-white bg-success">
+        <div>
+          <h5>Débitos Pagos (período)</h5>
+          <h2>R$ {{ debt_cards.paid.total|floatformat:2|intcomma }}</h2>
+          <p class="mb-1">{{ debt_cards.paid.count|intcomma }} baixa(s) registrada(s).</p>
+        </div>
+        <div class="mt-2">
+          <a href="{% url 'debts-list' %}?status=paid&start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-sm btn-outline-light">Ver pagos</a>
+        </div>
+      </div>
+      <div class="ft-stat-card text-white bg-primary">
+        <h5>Débitos Pag + Lucro</h5>
+        <h2>R$ {{ debt_cards.paid_plus_profit|floatformat:2|intcomma }}</h2>
+        <small>Soma dos débitos pagos no período com o lucro do período.</small>
       </div>
     </div>
-    <div class="card flex-fill text-white bg-success p-3">
-      <h5>Débitos Pagos (período)</h5>
-      <h2>R$ {{ debt_cards.paid.total|floatformat:2|intcomma }}</h2>
-      <p class="mb-1">{{ debt_cards.paid.count|intcomma }} baixa(s) registrada(s).</p>
-      <div class="mt-2">
-        <a href="{% url 'debts-list' %}?status=paid&start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-sm btn-outline-light">Ver pagos</a>
+
+    <div class="ft-chart-grid">
+      <div class="ft-chart-card ft-chart-card--compact ft-chart-card--fixed" style="grid-column: span 12;">
+        <h5>Custos x Faturamento</h5>
+        <canvas id="chart-cost-revenue"></canvas>
+        <div class="ft-chart-note">Distribuição percentual entre custos e faturamento.</div>
+      </div>
+      <div class="ft-chart-card ft-chart-card--wide" style="grid-column: span 12;">
+        <div class="d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Produtos Mais Vendidos</h5>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartExpandModal" data-chart="top-products">
+            Ampliar gráfico
+          </button>
+        </div>
+        <canvas id="chart-top-products"></canvas>
+        <div class="ft-chart-note">Top itens por quantidade vendida no período.</div>
+      </div>
+      <div class="ft-chart-card ft-chart-card--wide" style="grid-column: span 12;">
+        <div class="d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Vendas por Dia</h5>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartExpandModal" data-chart="sales-by-day">
+            Ampliar gráfico
+          </button>
+        </div>
+        <canvas id="chart-sales-by-day"></canvas>
+        <div class="ft-chart-note">Evolução diária de receita.</div>
       </div>
     </div>
-    <div class="card flex-fill text-white bg-primary p-3">
-      <h5>Débitos Pag + Lucro</h5>
-      <h2>R$ {{ debt_cards.paid_plus_profit|floatformat:2|intcomma }}</h2>
-      <p class="mb-1">Soma dos débitos pagos no período com o lucro do período.</p>
-    </div>
-  </div>
-</div>
 
-<!-- NOVA SEÇÃO: Tabela de Formas de Pagamento -->
-<!-- Seção de Formas de Pagamento -->
-<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12 mb-4">
-  <div class="card">
-    <div class="card-header bg-dark text-white">
-      <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Formas de Pagamento</h5>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-secondary">
-            <tr>
-              <th>Forma de Pagamento</th>
-              <th class="text-center">Transações</th>
-              <th class="text-end">Total (R$)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for payment in payment_summary %}
-            <tr>
-              <td class="fw-bold">
-                {% if payment.forma_pagamento == "PIX" %}
-                  <i class="bi bi-qr-code me-1 text-primary"></i>
-                {% elif payment.forma_pagamento == "DINHEIRO" %}
-                  <i class="bi bi-cash me-1 text-success"></i>
-                {% elif payment.forma_pagamento == "DEBITO" %}
-                  <i class="bi bi-credit-card me-1 text-info"></i>
-                {% elif payment.forma_pagamento == "CREDITO" %}
-                  <i class="bi bi-credit-card-2-front me-1 text-danger"></i>
-                {% else %}
-                  <i class="bi bi-question-circle me-1"></i>
-                {% endif %}
-                {{ payment.forma_pagamento }}
-              </td>
-              <td class="text-center">{{ payment.count }}</td>
-              <td class="text-end">{{ payment.total_value|floatformat:2|intcomma }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3" class="text-center text-danger">Nenhum registro</td></tr>
-            {% endfor %}
-          </tbody>
-          <tfoot class="table-dark">
-            <tr>
-              <th>Total</th>
-              <th class="text-center">{{ totals.total_tx }}</th>
-              <th class="text-end">{{ totals.total_revenue|floatformat:2|intcomma }}</th>
-            </tr>
-          </tfoot>
-        </table>
+    <div class="ft-table-card card">
+      <div class="card-header text-white">
+        <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Formas de Pagamento</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-secondary">
+              <tr>
+                <th>Forma de Pagamento</th>
+                <th class="text-center">Transações</th>
+                <th class="text-end">Total (R$)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for payment in payment_summary %}
+              <tr>
+                <td class="fw-bold">
+                  {% if payment.forma_pagamento == "PIX" %}
+                    <i class="bi bi-qr-code me-1 text-primary"></i>
+                  {% elif payment.forma_pagamento == "DINHEIRO" %}
+                    <i class="bi bi-cash me-1 text-success"></i>
+                  {% elif payment.forma_pagamento == "DEBITO" %}
+                    <i class="bi bi-credit-card me-1 text-info"></i>
+                  {% elif payment.forma_pagamento == "CREDITO" %}
+                    <i class="bi bi-credit-card-2-front me-1 text-danger"></i>
+                  {% else %}
+                    <i class="bi bi-question-circle me-1"></i>
+                  {% endif %}
+                  {{ payment.forma_pagamento }}
+                </td>
+                <td class="text-center">{{ payment.count }}</td>
+                <td class="text-end">{{ payment.total_value|floatformat:2|intcomma }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-danger">Nenhum registro</td></tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-dark">
+              <tr>
+                <th>Total</th>
+                <th class="text-center">{{ totals.total_tx }}</th>
+                <th class="text-end">{{ totals.total_revenue|floatformat:2|intcomma }}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Tabela Detalhada -->
-<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12 mt-4">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead class="table-dark">
-        <tr>
-          <th>Data</th>
-          <th>Código</th>
-          <th>Produto</th>
-          <th>Categoria</th>
-          <th class="text-end">Qtde</th>
-          <th class="text-end">Total (R$)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for i in report_data %}
-        <tr>
-          <td class="fw-bold">{{ i.sale_date|date:"d/m/Y" }}</td>
-          <td>{{ i.product_id__code }}</td>
-          <td>{{ i.product_id__name }}</td>
-          <td>
-            <span class="badge bg-secondary">
-              {{ i.product_id__category_id__name }}
-            </span>
-          </td>
-          <td class="text-end">{{ i.total_quantity|stringformat:"0.2f" }}</td>
-          <td class="text-end">{{ i.total_revenue|floatformat:2|intcomma }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="6" class="text-center text-danger">Nenhum registro</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="ft-table-card card">
+      <div class="card-header text-white">
+        <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Detalhamento por Produto</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Data</th>
+                <th>Código</th>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th class="text-end">Qtde</th>
+                <th class="text-end">Total (R$)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in report_data %}
+              <tr>
+                <td class="fw-bold">{{ i.sale_date|date:"d/m/Y" }}</td>
+                <td>{{ i.product_id__code }}</td>
+                <td>{{ i.product_id__name }}</td>
+                <td>
+                  <span class="badge bg-secondary">
+                    {{ i.product_id__category_id__name }}
+                  </span>
+                </td>
+                <td class="text-end">{{ i.total_quantity|stringformat:"0.2f" }}</td>
+                <td class="text-end">{{ i.total_revenue|floatformat:2|intcomma }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-center text-danger">Nenhum registro</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock pageContent %}
 
 {% block ScriptBlock %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ chart_report_data|json_script:"report-data" }}
+{{ chart_payment_by_day|json_script:"payment-by-day" }}
+<script>
+  const reportData = JSON.parse(document.getElementById('report-data').textContent || '[]');
+  const paymentByDay = JSON.parse(document.getElementById('payment-by-day').textContent || '[]');
+  const totalRevenue = parseFloat('{{ totals.total_revenue|floatformat:2 }}'.replace(',', '.')) || 0;
+  const totalCost = parseFloat('{{ totals.total_cost|floatformat:2 }}'.replace(',', '.')) || 0;
+
+  function buildEmptyState(canvasId, message) {
+    const card = document.getElementById(canvasId).closest('.ft-chart-card');
+    if (!card.querySelector('.ft-chart-empty')) {
+      const empty = document.createElement('div');
+      empty.className = 'ft-chart-empty';
+      empty.textContent = message;
+      card.appendChild(empty);
+    }
+  }
+
+  function formatCurrency(value) {
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function getTopProducts(data, limit = 8) {
+    const aggregated = {};
+    data.forEach(entry => {
+      const code = entry.product_id__code || '';
+      const name = entry.product_id__name || 'Produto';
+      const key = `${code} - ${name}`;
+      const qty = parseFloat(entry.total_quantity || 0);
+      aggregated[key] = (aggregated[key] || 0) + qty;
+    });
+    const sorted = Object.entries(aggregated)
+      .map(([label, qty]) => ({ label, qty }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, limit);
+    return sorted;
+  }
+
+  function getSalesByDay(entries) {
+    const aggregated = {};
+    entries.forEach(entry => {
+      const rawDate = entry.sale_date || '';
+      const day = rawDate ? rawDate.slice(0, 10) : 'Data';
+      const total = parseFloat(entry.total_value || 0);
+      aggregated[day] = (aggregated[day] || 0) + total;
+    });
+    return Object.entries(aggregated)
+      .map(([day, total]) => ({ day, total }))
+      .sort((a, b) => (a.day > b.day ? 1 : -1));
+  }
+
+  let topProductsChart = null;
+  let salesByDayChart = null;
+  let modalChartInstance = null;
+  let chartPayloads = {};
+
+  function initCharts() {
+    const pieCtx = document.getElementById('chart-cost-revenue');
+    const topCtx = document.getElementById('chart-top-products');
+    const dayCtx = document.getElementById('chart-sales-by-day');
+
+    if (!pieCtx || !topCtx || !dayCtx) {
+      return;
+    }
+
+    if (totalRevenue <= 0 && totalCost <= 0) {
+      buildEmptyState('chart-cost-revenue', 'Sem dados para o período.');
+    } else {
+      new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Custos', 'Faturamento'],
+          datasets: [{
+            data: [totalCost, totalRevenue],
+            backgroundColor: ['#f97316', '#22c55e'],
+            borderWidth: 0,
+            hoverOffset: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          animation: {
+            duration: 1400,
+            easing: 'easeOutQuart',
+            animateRotate: true,
+            animateScale: true,
+          },
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed || 0;
+                  return `${context.label}: R$ ${formatCurrency(value)}`;
+                }
+              }
+            }
+          },
+          cutout: '62%',
+        }
+      });
+    }
+
+    const topProducts = getTopProducts(reportData, 10);
+    if (!topProducts.length) {
+      buildEmptyState('chart-top-products', 'Sem produtos vendidos no período.');
+    } else {
+      const topChartConfig = {
+        type: 'line',
+        data: {
+          labels: topProducts.map(item => item.label),
+          datasets: [{
+            label: 'Quantidade vendida',
+            data: topProducts.map(item => item.qty),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.15)',
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          animation: {
+            duration: 1400,
+            easing: 'easeOutQuart',
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0,0,0,0.06)' },
+            },
+            x: {
+              ticks: { maxRotation: 60, minRotation: 40 },
+              grid: { display: false },
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `Qtd: ${context.parsed.y.toFixed(2)}`;
+                }
+              }
+            }
+          }
+        }
+      };
+      topProductsChart = new Chart(topCtx, topChartConfig);
+      chartPayloads['top-products'] = topChartConfig;
+    }
+
+    const salesByDay = getSalesByDay(paymentByDay);
+    if (!salesByDay.length) {
+      buildEmptyState('chart-sales-by-day', 'Sem vendas registradas no período.');
+    } else {
+      const dayChartConfig = {
+        type: 'line',
+        data: {
+          labels: salesByDay.map(item => item.day.split('-').reverse().join('/')),
+          datasets: [{
+            label: 'Receita diária (R$)',
+            data: salesByDay.map(item => item.total),
+            borderColor: '#0ea5e9',
+            backgroundColor: 'rgba(14, 165, 233, 0.18)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          animation: {
+            duration: 1500,
+            easing: 'easeOutQuart',
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0,0,0,0.06)' },
+              ticks: {
+                callback: function(value) {
+                  return `R$ ${formatCurrency(value)}`;
+                }
+              }
+            },
+            x: {
+              grid: { display: false },
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `R$ ${formatCurrency(context.parsed.y)}`;
+                }
+              }
+            }
+          }
+        }
+      };
+      salesByDayChart = new Chart(dayCtx, dayChartConfig);
+      chartPayloads['sales-by-day'] = dayChartConfig;
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCharts);
+  } else {
+    initCharts();
+  }
+</script>
+
+<div class="modal fade" id="chartExpandModal" tabindex="-1" aria-labelledby="chartExpandModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chartExpandModalLabel">Gráfico</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <canvas id="chart-expand-canvas" style="width: 100%; height: 260px;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function cloneConfig(config) {
+    return JSON.parse(JSON.stringify(config));
+  }
+
+  function openExpandedChart(chartKey) {
+    const modalTitle = document.getElementById('chartExpandModalLabel');
+    const canvas = document.getElementById('chart-expand-canvas');
+    if (!chartPayloads[chartKey]) {
+      return;
+    }
+    if (modalChartInstance) {
+      modalChartInstance.destroy();
+      modalChartInstance = null;
+    }
+    const config = cloneConfig(chartPayloads[chartKey]);
+    config.options = config.options || {};
+    config.options.animation = config.options.animation || {};
+    config.options.animation.duration = 1400;
+
+    if (chartKey === 'top-products') {
+      modalTitle.textContent = 'Produtos Mais Vendidos';
+      config.options.scales = config.options.scales || {};
+      if (config.options.scales.x && config.options.scales.x.ticks) {
+        config.options.scales.x.ticks.maxRotation = 35;
+        config.options.scales.x.ticks.minRotation = 25;
+      }
+    }
+    if (chartKey === 'sales-by-day') {
+      modalTitle.textContent = 'Vendas por Dia';
+    }
+    modalChartInstance = new Chart(canvas, config);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('chartExpandModal');
+    modal.addEventListener('show.bs.modal', function(event) {
+      const trigger = event.relatedTarget;
+      const chartKey = trigger ? trigger.getAttribute('data-chart') : null;
+      if (chartKey) {
+        openExpandedChart(chartKey);
+      }
+    });
+    modal.addEventListener('hidden.bs.modal', function() {
+      if (modalChartInstance) {
+        modalChartInstance.destroy();
+        modalChartInstance = null;
+      }
+    });
+  });
+</script>
 {% endblock ScriptBlock %}

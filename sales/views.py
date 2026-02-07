@@ -1267,12 +1267,30 @@ def sales_report(request):
         )
     ]
 
-    payment_by_day = (
+    payment_by_day = list(
         sales_qs.annotate(sale_date=TruncDate('date_added'))
         .values('sale_date', 'forma_pagamento')
         .annotate(count=Count('id'), total_value=Sum('grand_total'))
         .order_by('-sale_date', 'forma_pagamento')
     )
+
+    chart_report_data = [
+        {
+            'sale_date': rec.get('sale_date').isoformat() if rec.get('sale_date') else '',
+            'product_id__code': rec.get('product_id__code'),
+            'product_id__name': rec.get('product_id__name'),
+            'total_quantity': float(rec.get('total_quantity') or 0),
+        }
+        for rec in report_data
+    ]
+
+    chart_payment_by_day = [
+        {
+            'sale_date': entry.get('sale_date').isoformat() if entry.get('sale_date') else '',
+            'total_value': float(entry.get('total_value') or 0),
+        }
+        for entry in payment_by_day
+    ]
 
     debt_pending_qs = Debt.objects.filter(
         company=user_company,
@@ -1326,9 +1344,11 @@ def sales_report(request):
         'end_date': end.strftime('%Y-%m-%d'),
         'totals': totals,
         'report_data': report_data,
+        'chart_report_data': chart_report_data,
         'current': 'sales_report',
         'payment_summary': payment_summary,
         'payment_by_day': payment_by_day,
+        'chart_payment_by_day': chart_payment_by_day,
         'debt_cards': debt_cards,
     }
     return render(request, 'sales/sales_report.html', context)
