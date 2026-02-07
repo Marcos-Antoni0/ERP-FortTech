@@ -68,7 +68,7 @@ def pos(request):
 
     cash_session = get_open_cash_session(user_company)
 
-    estoques = (
+    estoque_qs = (
         Estoque.objects.filter(
             status=1,
             company=user_company,
@@ -76,8 +76,29 @@ def pos(request):
             produto__is_combo=False,
         )
         .select_related('produto')
-        .order_by('produto__name')
     )
+    estoque_map = {estoque.produto_id: estoque for estoque in estoque_qs}
+
+    catalog_products = (
+        Products.objects.filter(
+            company=user_company,
+            status=1,
+            is_combo=False,
+        )
+        .order_by('name')
+    )
+
+    products_for_pos = [
+        {
+            'produto': product,
+            'quantidade': (
+                estoque_map[product.id].quantidade
+                if product.id in estoque_map
+                else None
+            ),
+        }
+        for product in catalog_products
+    ]
 
     combo_products = (
         Products.objects.filter(company=user_company, status=1, is_combo=True)
@@ -101,14 +122,14 @@ def pos(request):
         }
 
     product_json = []
-    for estoque in estoques:
-        product = estoque.produto
+    for entry in products_for_pos:
+        product = entry['produto']
         product_json.append(
             {
                 'id': product.id,
                 'name': product.name,
                 'price': float(product.price),
-                'estoque': estoque.quantidade,
+                'estoque': entry['quantidade'],
                 'code': product.code,
                 'codigo_barras': getattr(product, 'codigo_barras', product.code),
                 'barcode': getattr(product, 'barcode', product.code),
@@ -176,7 +197,7 @@ def pos(request):
 
     context = {
         'page_title': 'Ponto de Venda',
-        'products': estoques,
+        'products': products_for_pos,
         'combo_products': combo_products,
         'product_json': json.dumps(product_json),
         'cash_session_open': bool(cash_session),

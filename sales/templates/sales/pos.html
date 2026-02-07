@@ -48,7 +48,12 @@
                                 <option value="" disabled selected></option>
                                 {% for est in products %}
                                     <option value="{{ est.produto.id }}" data-is-combo="false">
-                                        {{ est.produto.code }} - {{ est.produto.name }} (Em estoque: {{ est.quantidade }})
+                                        {{ est.produto.code }} - {{ est.produto.name }}
+                                        {% if est.quantidade != None %}
+                                            (Em estoque: {{ est.quantidade }})
+                                        {% else %}
+                                            (Sem estoque)
+                                        {% endif %}
                                     </option>
                                 {% endfor %}
                                 {% if combo_products %}
