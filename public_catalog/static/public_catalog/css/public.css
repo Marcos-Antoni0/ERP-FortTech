@@ -1,0 +1,120 @@
+body {
+    font-family: 'Sora', system-ui, sans-serif;
+    background: radial-gradient(circle at top left, #f2f6ff 0%, #ffffff 45%, #f7fbff 100%);
+    color: #1f2937;
+}
+
+.public-header {
+    background: var(--catalog-primary, #002d6c);
+    color: #ffffff;
+}
+
+.public-header a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.public-cart-button {
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    color: #ffffff;
+    background: transparent;
+}
+
+.public-cart-button:hover,
+.public-cart-button:focus {
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.catalog-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.catalog-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.catalog-price {
+    font-weight: 700;
+    color: var(--catalog-primary, #002d6c);
+}
+
+.cart-summary {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeUp 0.4s ease forwards;
+}
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.skeleton-grid {
+    display: none;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.skeleton-card {
+    background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    height: 160px;
+    border-radius: 12px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+body.is-loading .catalog-content {
+    display: none;
+}
+
+body.is-loading .skeleton-grid {
+    display: grid;
+}
+
+.infinite-scroll-sentinel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 32px;
+    color: #6b7280;
+}
+
+.infinite-scroll-sentinel.is-loading::after {
+    content: 'Carregando...';
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .public-header {
+        text-align: center;
+    }
+    .public-header .container {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .catalog-card {
+        padding: 16px;
+    }
+}

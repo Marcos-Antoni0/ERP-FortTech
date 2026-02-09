@@ -1,0 +1,53 @@
+{% extends 'public_catalog/public/base_public.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <h4>Finalizar pedido</h4>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">{{ form.customer_name.label }}</label>
+                {{ form.customer_name }}
+                {{ form.customer_name.errors }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ form.customer_phone.label }}</label>
+                {{ form.customer_phone }}
+                {{ form.customer_phone.errors }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ form.customer_notes.label }}</label>
+                {{ form.customer_notes }}
+                {{ form.customer_notes.errors }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ form.delivery_address.label }}</label>
+                {{ form.delivery_address }}
+                {{ form.delivery_address.errors }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ form.payment_method.label }}</label>
+                {{ form.payment_method }}
+                {{ form.payment_method.errors }}
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar para WhatsApp</button>
+        </form>
+    </div>
+    <div class="col-md-5">
+        <div class="cart-summary">
+            <h5>Resumo</h5>
+            <ul class="list-unstyled">
+                {% for item in items %}
+                <li class="mb-2">
+                    {{ item.quantity }}x {{ item.product.name }}
+                    <span class="float-end">R$ {{ item.subtotal }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <hr>
+            <p>Total: <strong>R$ {{ total }}</strong></p>
+        </div>
+    </div>
+</div>
+{% endblock content %}

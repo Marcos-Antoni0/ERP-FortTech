@@ -1,0 +1,53 @@
+{% extends 'public_catalog/public/base_public.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h4>Seu carrinho</h4>
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Qtd</th>
+                        <th>Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>
+                            <form method="post" action="{% url 'public-catalog-update-cart' slug=slug product_id=item.product.id %}" class="d-flex align-items-center gap-2">
+                                {% csrf_token %}
+                                <input type="number" name="quantity" min="1" value="{{ item.quantity }}" class="form-control" style="max-width: 80px;">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Atualizar</button>
+                            </form>
+                        </td>
+                        <td>R$ {{ item.subtotal }}</td>
+                        <td>
+                            <form method="post" action="{% url 'public-catalog-remove-cart' slug=slug product_id=item.product.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Seu carrinho está vazio.</p>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <div class="cart-summary">
+            <h5>Resumo</h5>
+            <p>Total: <strong>R$ {{ total }}</strong></p>
+            <a class="btn btn-primary w-100" href="{% url 'public-catalog-checkout' slug=slug %}">Finalizar pedido</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

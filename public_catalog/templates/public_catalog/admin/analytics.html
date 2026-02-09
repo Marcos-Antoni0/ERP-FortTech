@@ -1,0 +1,108 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block pageContent %}
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Relatórios do Catálogo</h4>
+            <form method="get" class="row g-2 mb-4">
+                <div class="col-md-3">
+                    <input type="date" name="start_date" class="form-control" value="{{ selected_start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="end_date" class="form-control" value="{{ selected_end_date }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+                <div class="col-md-2">
+                    <a class="btn btn-outline-primary w-100" href="{% url 'public-catalog-admin-export' %}?start_date={{ selected_start_date }}&end_date={{ selected_end_date }}">Exportar CSV</a>
+                </div>
+            </form>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <h6>Total de pedidos</h6>
+                        <h3>{{ total_orders }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <h6>Valor total</h6>
+                        <h3>R$ {{ total_value }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <h6>Ticket médio</h6>
+                        <h3>R$ {{ avg_value|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-3 mb-4">
+                <h6>Pedidos por período</h6>
+                <canvas id="ordersChart"></canvas>
+            </div>
+
+            <div class="card p-3">
+                <h6>Produtos mais visualizados</h6>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Visualizações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in top_viewed_products %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.view_count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2">Nenhum dado disponível.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}
+
+{% block ScriptBlock %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const labels = {{ chart_labels|safe }};
+    const values = {{ chart_values|safe }};
+    const ctx = document.getElementById('ordersChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pedidos',
+                    data: values,
+                    borderColor: '#002d6c',
+                    backgroundColor: 'rgba(0, 45, 108, 0.1)',
+                    tension: 0.3,
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                },
+            },
+        });
+    }
+</script>
+{% endblock ScriptBlock %}

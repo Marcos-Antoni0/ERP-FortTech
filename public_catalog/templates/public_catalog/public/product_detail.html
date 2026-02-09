@@ -1,0 +1,161 @@
+{% extends 'public_catalog/public/base_public.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mb-3">
+        {% if images %}
+        <div class="catalog-gallery">
+            <div class="catalog-main-image-wrapper mb-3">
+                <img
+                    id="catalog-main-image"
+                    class="img-fluid rounded"
+                    loading="lazy"
+                    src="{{ images.0.image.url }}"
+                    alt="{{ images.0.alt_text|default:catalog_product.product.name }}"
+                    data-index="0"
+                >
+                <button
+                    class="catalog-gallery-nav catalog-gallery-prev"
+                    type="button"
+                    data-direction="-1"
+                    aria-label="Imagem anterior"
+                >
+                    &lsaquo;
+                </button>
+                <button
+                    class="catalog-gallery-nav catalog-gallery-next"
+                    type="button"
+                    data-direction="1"
+                    aria-label="Pr?xima imagem"
+                >
+                    &rsaquo;
+                </button>
+            </div>
+            <div class="d-flex gap-2 flex-wrap" id="catalog-thumbnails">
+                {% for image in images %}
+                <button
+                    type="button"
+                    class="catalog-thumbnail{% if forloop.first %} is-active{% endif %}"
+                    data-index="{{ forloop.counter0 }}"
+                    data-src="{{ image.image.url }}"
+                    data-alt="{{ image.alt_text|default:catalog_product.product.name }}"
+                >
+                    <img
+                        class="img-thumbnail"
+                        style="width: 72px; height: 72px; object-fit: cover;"
+                        loading="lazy"
+                        src="{{ image.image.url }}"
+                        alt="{{ image.alt_text|default:catalog_product.product.name }}"
+                    >
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="catalog-card p-4 text-center">Sem imagens dispon?veis</div>
+        {% endif %}
+    </div>
+    <div class="col-md-6 mb-3">
+        <h3>{{ catalog_product.product.name }}</h3>
+        <div class="mb-2">{{ catalog_product.public_description|safe }}</div>
+        {% if settings.display_prices %}
+        <div class="catalog-price mb-3">R$ {{ catalog_product.product.price }}</div>
+        {% endif %}
+        <form class="add-to-cart-form" method="post" action="{% url 'public-catalog-add-to-cart' slug=slug product_id=catalog_product.product.id %}">
+            {% csrf_token %}
+            <div class="input-group mb-3" style="max-width: 160px;">
+                <input class="form-control" type="number" name="quantity" min="1" value="1">
+            </div>
+            <button type="submit" class="btn btn-primary">Adicionar ao carrinho</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .catalog-main-image-wrapper {
+        position: relative;
+    }
+    .catalog-gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 0;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 24px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s ease;
+    }
+    .catalog-gallery-nav:hover {
+        background: rgba(0, 0, 0, 0.75);
+    }
+    .catalog-gallery-prev {
+        left: 12px;
+    }
+    .catalog-gallery-next {
+        right: 12px;
+    }
+    .catalog-thumbnail {
+        border: 2px solid transparent;
+        padding: 0;
+        background: transparent;
+        border-radius: 8px;
+    }
+    .catalog-thumbnail.is-active {
+        border-color: var(--catalog-primary);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const mainImage = document.getElementById('catalog-main-image');
+        const thumbnails = Array.from(document.querySelectorAll('.catalog-thumbnail'));
+        if (!mainImage || thumbnails.length === 0) {
+            return;
+        }
+
+        const navButtons = Array.from(document.querySelectorAll('.catalog-gallery-nav'));
+        if (thumbnails.length <= 1) {
+            navButtons.forEach((button) => {
+                button.style.display = 'none';
+            });
+        }
+
+        const setActive = (index) => {
+            const thumbnail = thumbnails[index];
+            if (!thumbnail) {
+                return;
+            }
+            const src = thumbnail.dataset.src;
+            const alt = thumbnail.dataset.alt;
+            mainImage.src = src;
+            mainImage.alt = alt;
+            mainImage.dataset.index = index.toString();
+            thumbnails.forEach((item) => item.classList.remove('is-active'));
+            thumbnail.classList.add('is-active');
+        };
+
+        thumbnails.forEach((thumbnail) => {
+            thumbnail.addEventListener('click', () => {
+                const index = Number(thumbnail.dataset.index);
+                setActive(index);
+            });
+        });
+
+        navButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const direction = Number(button.dataset.direction);
+                const currentIndex = Number(mainImage.dataset.index || '0');
+                const nextIndex = (currentIndex + direction + thumbnails.length) % thumbnails.length;
+                setActive(nextIndex);
+            });
+        });
+    });
+</script>
+{% endblock content %}

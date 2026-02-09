@@ -1,0 +1,13 @@
+{% extends 'public_catalog/public/base_public.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h4>Pedido enviado</h4>
+        <p>Seu pedido foi registrado com sucesso.</p>
+        <p><strong>Número do pedido:</strong> {{ order.order_number }}</p>
+        <p>Se você não foi redirecionado ao WhatsApp, entre em contato com a empresa.</p>
+        <a class="btn btn-primary" href="{% url 'public-catalog-home' slug=slug %}">Voltar ao catálogo</a>
+    </div>
+</div>
+{% endblock content %}

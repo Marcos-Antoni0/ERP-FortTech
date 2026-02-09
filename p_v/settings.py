@@ -39,7 +39,11 @@ INSTALLED_APPS = [
     'staff',
     'clients',
     'debts',
+    'public_catalog',
+    'ckeditor',
+    'ckeditor_uploader',
     'django.contrib.humanize',
+    'django_ratelimit',
 
 ]
 
@@ -52,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'p_v_App.middleware.SingleSessionMiddleware',  # Middleware de sessão única
     'p_v_App.middleware_tenant.TenantMiddleware',  # Middleware de multi-tenancy
+    'public_catalog.middleware.PublicCatalogOriginValidationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -81,7 +86,7 @@ WSGI_APPLICATION = 'p_v.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:BnjhNMbyYUgvRUHzdRTISmYicWdkRTLh@trolley.proxy.rlwy.net:46402/railway',
+        default='postgresql://postgres:IcmskSFcjSccnTXfeWockdteMBzPRZpO@shortline.proxy.rlwy.net:35872/railway',
         conn_max_age=600,
         ssl_require=not DEBUG
     )
@@ -126,6 +131,47 @@ STATICFILES_DIRS = (
     './static',
 )
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+REDIS_URL = os.environ.get('REDIS_URL')
+
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        }
+    }
+    RATELIMIT_ENABLE = True
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'public-catalog-cache',
+        }
+    }
+    RATELIMIT_ENABLE = False
+
+CKEDITOR_UPLOAD_PATH = 'catalog_uploads/'
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat', 'Source'],
+        ],
+    },
+}
+
+RATELIMIT_FAIL_OPEN = True
+
+SILENCED_SYSTEM_CHECKS = [
+    'django_ratelimit.E003',
+]
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

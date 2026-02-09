@@ -1,0 +1,161 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block pageContent %}
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Produtos do Catálogo</h4>
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <select name="category" class="form-control">
+                        <option value="">Todas as categorias</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:'s' %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="visibility" class="form-control">
+                        <option value="">Visibilidade</option>
+                        <option value="visible" {% if selected_visibility == 'visible' %}selected{% endif %}>Visível</option>
+                        <option value="hidden" {% if selected_visibility == 'hidden' %}selected{% endif %}>Oculto</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="highlighted" class="form-control">
+                        <option value="">Destaque</option>
+                        <option value="1" {% if selected_highlighted == '1' %}selected{% endif %}>Em destaque</option>
+                        <option value="0" {% if selected_highlighted == '0' %}selected{% endif %}>Sem destaque</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+            <form method="post" action="{% url 'public-catalog-admin-products-bulk' %}" class="mb-3">
+                {% csrf_token %}
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <select name="action" class="form-control">
+                            <option value="">Ação em massa</option>
+                            <option value="visible">Tornar visível</option>
+                            <option value="hidden">Tornar oculto</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-secondary w-100">Aplicar</button>
+                    </div>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped" id="catalog-products-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="select-all-products">
+                            </th>
+                            <th>Produto</th>
+                            <th>Categoria</th>
+                            <th>Visível</th>
+                            <th>Destaque</th>
+                            <th>Ordem</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in catalog_products %}
+                        <tr data-id="{{ item.id }}" draggable="true">
+                            <td>
+                                <input type="checkbox" name="product_ids" value="{{ item.id }}" class="product-checkbox">
+                            </td>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.product.category_id.name }}</td>
+                            <td>{{ item.is_visible_public|yesno:'Sim,Não' }}</td>
+                            <td>{{ item.highlighted|yesno:'Sim,Não' }}</td>
+                            <td>{{ item.display_order }}</td>
+                            <td>
+                                <a class="btn btn-sm btn-primary" href="{% url 'public-catalog-admin-product-edit' item.id %}">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">Nenhum produto encontrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </form>
+            <form method="post" action="{% url 'public-catalog-admin-products-reorder' %}" id="reorder-products-form">
+                {% csrf_token %}
+                <input type="hidden" name="order_ids_list" id="order-ids-products">
+                <button type="submit" class="btn btn-outline-primary">Salvar ordem</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}
+
+{% block ScriptBlock %}
+<script>
+    const selectAll = document.getElementById('select-all-products');
+    const productCheckboxes = document.querySelectorAll('.product-checkbox');
+    if (selectAll) {
+        selectAll.addEventListener('change', () => {
+            productCheckboxes.forEach((checkbox) => {
+                checkbox.checked = selectAll.checked;
+            });
+        });
+    }
+
+    const tableBody = document.querySelector('#catalog-products-table tbody');
+    const orderInput = document.getElementById('order-ids-products');
+
+    const updateOrderInput = () => {
+        if (!orderInput || !tableBody) return;
+        const ids = Array.from(tableBody.querySelectorAll('tr[data-id]')).map(
+            (row) => row.dataset.id,
+        );
+        orderInput.value = ids.join(',');
+    };
+
+    if (tableBody) {
+        let draggingRow = null;
+        tableBody.addEventListener('dragstart', (event) => {
+            draggingRow = event.target.closest('tr');
+            if (draggingRow) {
+                draggingRow.classList.add('table-active');
+            }
+        });
+        tableBody.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            const targetRow = event.target.closest('tr');
+            if (!draggingRow || !targetRow || draggingRow === targetRow) {
+                return;
+            }
+            const rect = targetRow.getBoundingClientRect();
+            const next = (event.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            tableBody.insertBefore(draggingRow, next ? targetRow.nextSibling : targetRow);
+        });
+        tableBody.addEventListener('dragend', () => {
+            if (draggingRow) {
+                draggingRow.classList.remove('table-active');
+            }
+            draggingRow = null;
+            updateOrderInput();
+        });
+        updateOrderInput();
+    }
+
+    const reorderForm = document.getElementById('reorder-products-form');
+    if (reorderForm) {
+        reorderForm.addEventListener('submit', () => {
+            updateOrderInput();
+        });
+    }
+</script>
+{% endblock ScriptBlock %}

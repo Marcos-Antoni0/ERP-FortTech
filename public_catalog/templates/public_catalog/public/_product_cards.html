@@ -1,0 +1,32 @@
+{% for item in products %}
+<div class="col-md-4 mb-3">
+    <div class="catalog-card p-3 h-100 reveal">
+        {% with image=item.product.images.first %}
+        {% if image %}
+        <img class="img-fluid rounded mb-2" loading="lazy" src="{{ image.image.url }}" alt="{{ image.alt_text|default:item.product.name }}">
+        {% endif %}
+        {% endwith %}
+        <h5>{{ item.product.name }}</h5>
+        <p class="text-muted">{{ item.product.description }}</p>
+        {% if settings.display_prices %}
+        <div class="catalog-price mb-2">R$ {{ item.product.price }}</div>
+        {% endif %}
+        {% if show_cart_action %}
+        <form class="add-to-cart-form" method="post" action="{% url 'public-catalog-add-to-cart' slug=slug product_id=item.product.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+            <a class="btn btn-outline-primary btn-sm" href="{% url 'public-catalog-product-detail' slug=slug product_id=item.product.id %}">
+                Detalhes
+            </a>
+        </form>
+        {% else %}
+        <a class="btn btn-primary btn-sm" href="{% url 'public-catalog-product-detail' slug=slug product_id=item.product.id %}">
+            Ver detalhes
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<p>{{ empty_message|default:'Nenhum produto encontrado.' }}</p>
+{% endfor %}

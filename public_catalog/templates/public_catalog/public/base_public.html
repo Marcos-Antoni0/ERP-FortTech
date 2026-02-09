@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.catalog_title|default:company.name }} | Catálogo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'p_v_App/assets/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'public_catalog/css/public.css' %}">
+    <style>
+        :root {
+            --catalog-primary: {{ settings.primary_color|default:'#002d6c' }};
+        }
+    </style>
+</head>
+<body class="is-loading">
+    <header class="public-header py-3 mb-4">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div>
+                <h3 class="mb-0">{{ settings.catalog_title|default:company.name }}</h3>
+                {% if settings.catalog_description %}
+                <small>{{ settings.catalog_description }}</small>
+                {% endif %}
+            </div>
+            <div>
+                <a class="btn public-cart-button" href="{% url 'public-catalog-cart' slug=slug %}">Carrinho</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container pb-5">
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock content %}
+    </main>
+
+    <div class="modal fade" id="cart-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Item adicionado</h5>
+                    <button type="button" class="btn-close" data-cart-close></button>
+                </div>
+                <div class="modal-body">
+                    Produto adicionado ao carrinho.
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary" href="{% url 'public-catalog-cart' slug=slug %}">Ver carrinho</a>
+                    <button type="button" class="btn btn-secondary" data-cart-close>Continuar comprando</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.remove('is-loading');
+        });
+    </script>
+    <script src="{% static 'p_v_App/assets/default/js/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'p_v_App/assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'public_catalog/js/cart.js' %}"></script>
+    <script src="{% static 'public_catalog/js/infinite_scroll.js' %}"></script>
+</body>
+</html>

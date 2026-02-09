@@ -230,11 +230,7 @@ function delete_pedido($id) {
             if (resp.status === 'success') {
                 // Mostrar toast e garantir redirecionamento
                 alert_toast("Pedido deletado com sucesso.", 'success');
-                
-                // Forçar reload da página de forma mais direta e garantida
-                setTimeout(function() {
-                    window.location.href = window.location.href; // Abordagem mais confiável para recarregar
-                }, 1500);
+                window.location.reload();
             } else {
                 alert_toast("Erro ao deletar pedido: " + resp.msg, 'error');
             }

@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block pageContent %}
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Pedido {{ order.order_number }}</h4>
+            <p><strong>Cliente:</strong> {{ order.customer_name }}</p>
+            <p><strong>Telefone:</strong> {{ order.customer_phone }}</p>
+            <p><strong>Observações:</strong> {{ order.customer_notes|default:'-' }}</p>
+            <p><strong>Endereço:</strong> {{ order.delivery_address|default:'-' }}</p>
+            <p><strong>Forma de pagamento:</strong> {{ order.get_payment_method_display }}</p>
+            <p><strong>Status:</strong> {{ order.get_status_display }}</p>
+            <p><strong>Total:</strong> R$ {{ order.total_value }}</p>
+
+            <h5 class="mt-4">Itens</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Qtd</th>
+                            <th>Preço</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>R$ {{ item.unit_price }}</td>
+                            <td>R$ {{ item.subtotal }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">Nenhum item registrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status">
+                        <div class="input-group">
+                            <select name="status" class="form-control">
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                                <option value="finalizado">Finalizar (gerar venda)</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary" onclick="return confirmFinalizarPedido();">Atualizar status</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6 text-end">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="convert_to_order">
+                        <button type="submit" class="btn btn-outline-primary">Enviar para Sistema de Pedidos</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a class="btn btn-secondary" href="{% url 'public-catalog-admin-orders' %}">Voltar</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}
+
+{% block ScriptBlock %}
+<script>
+    function confirmFinalizarPedido() {
+        const statusSelect = document.querySelector('select[name="status"]');
+        if (!statusSelect) {
+            return true;
+        }
+        if (statusSelect.value === 'finalizado') {
+            return confirm('Deseja finalizar este pedido e gerar a venda?');
+        }
+        return true;
+    }
+</script>
+{% endblock ScriptBlock %}

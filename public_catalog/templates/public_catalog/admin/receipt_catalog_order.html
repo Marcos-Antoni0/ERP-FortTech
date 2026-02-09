@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        @page { size: 64mm auto; margin: 0; }
+        html, body {
+            margin: 0;
+            width: 64mm;
+            background: #fff;
+            color: #000;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .thermal-wrapper {
+            padding: 0 2mm 4mm;
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .header h6 {
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .divider {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .items .item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        .item-name {
+            flex: 1;
+            padding: 0 4px;
+        }
+        .notes {
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        @media print {
+            .actions { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="thermal-wrapper" id="catalog-order-receipt">
+        <div class="header">
+            <h6>{{ title }}</h6>
+            <div>{{ company.name|default:'Empresa' }}</div>
+            {% if company.cnpj %}
+            <div style="font-size: 11px;">CNPJ: {{ company.cnpj }}</div>
+            {% endif %}
+            <small>Pedido do Catálogo</small>
+        </div>
+
+        <hr class="divider">
+
+        <div class="row">
+            <span>Data:</span>
+            <span>{{ order.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="row">
+            <span>Pedido:</span>
+            <span>{{ order.order_number }}</span>
+        </div>
+        <div class="row">
+            <span>Cliente:</span>
+            <span>{{ order.customer_name }}</span>
+        </div>
+        <div class="row" style="flex-direction: column; align-items: flex-start;">
+            <span>EndereÃ§o:</span>
+            <span>{{ order.delivery_address|default:'-' }}</span>
+        </div>
+        <div class="row">
+            <span>Pagamento:</span>
+            <span>{{ order.get_payment_method_display }}</span>
+        </div>
+
+        <hr class="divider">
+
+        <div class="row" style="font-weight: bold;">
+            <span style="width: 12%;">Qtd</span>
+            <span style="flex: 1; text-align: left;">Item</span>
+        </div>
+
+        <div class="items">
+            {% for item in items %}
+            <div class="item">
+                <span style="width: 12%;">{{ item.quantity }}</span>
+                <span class="item-name">{{ item.name }}</span>
+            </div>
+            {% if item.notes %}
+            <div class="notes">Obs: {{ item.notes }}</div>
+            {% endif %}
+            {% empty %}
+            <div class="item" style="justify-content: center;">Nenhum item registrado.</div>
+            {% endfor %}
+        </div>
+
+        <hr class="divider">
+
+        <div class="row" style="font-weight: bold;">
+            <span>Total</span>
+            <span>R$ {{ order.total_value|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="button" id="catalog-order-print">Imprimir</button>
+    </div>
+
+    <script>
+        const printButton = document.getElementById('catalog-order-print');
+        const autoPrint = new URLSearchParams(window.location.search).get('print') === '1';
+
+        const doPrint = () => {
+            window.print();
+        };
+
+        if (printButton) {
+            printButton.addEventListener('click', doPrint);
+        }
+
+        if (autoPrint) {
+            setTimeout(doPrint, 200);
+        }
+    </script>
+</body>
+</html>

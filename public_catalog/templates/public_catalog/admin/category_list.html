@@ -1,0 +1,109 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block pageContent %}
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Categorias do Catálogo</h4>
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <select name="visibility" class="form-control">
+                        <option value="">Visibilidade</option>
+                        <option value="visible" {% if selected_visibility == 'visible' %}selected{% endif %}>Visível</option>
+                        <option value="hidden" {% if selected_visibility == 'hidden' %}selected{% endif %}>Oculto</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-striped" id="catalog-categories-table">
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Visível</th>
+                            <th>Ordem</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in catalog_categories %}
+                        <tr data-id="{{ item.id }}" draggable="true">
+                            <td>{{ item.category.name }}</td>
+                            <td>{{ item.is_visible_public|yesno:'Sim,Não' }}</td>
+                            <td>{{ item.display_order }}</td>
+                            <td>
+                                <a class="btn btn-sm btn-primary" href="{% url 'public-catalog-admin-category-edit' item.id %}">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">Nenhuma categoria encontrada.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <form method="post" action="{% url 'public-catalog-admin-categories-reorder' %}" id="reorder-categories-form" class="mt-3">
+                {% csrf_token %}
+                <input type="hidden" name="order_ids_list" id="order-ids-categories">
+                <button type="submit" class="btn btn-outline-primary">Salvar ordem</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}
+
+{% block ScriptBlock %}
+<script>
+    const categoryTableBody = document.querySelector('#catalog-categories-table tbody');
+    const categoryOrderInput = document.getElementById('order-ids-categories');
+
+    const updateCategoryOrder = () => {
+        if (!categoryOrderInput || !categoryTableBody) return;
+        const ids = Array.from(categoryTableBody.querySelectorAll('tr[data-id]')).map(
+            (row) => row.dataset.id,
+        );
+        categoryOrderInput.value = ids.join(',');
+    };
+
+    if (categoryTableBody) {
+        let draggingRow = null;
+        categoryTableBody.addEventListener('dragstart', (event) => {
+            draggingRow = event.target.closest('tr');
+            if (draggingRow) {
+                draggingRow.classList.add('table-active');
+            }
+        });
+        categoryTableBody.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            const targetRow = event.target.closest('tr');
+            if (!draggingRow || !targetRow || draggingRow === targetRow) {
+                return;
+            }
+            const rect = targetRow.getBoundingClientRect();
+            const next = (event.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            categoryTableBody.insertBefore(draggingRow, next ? targetRow.nextSibling : targetRow);
+        });
+        categoryTableBody.addEventListener('dragend', () => {
+            if (draggingRow) {
+                draggingRow.classList.remove('table-active');
+            }
+            draggingRow = null;
+            updateCategoryOrder();
+        });
+        updateCategoryOrder();
+    }
+
+    const reorderCategoriesForm = document.getElementById('reorder-categories-form');
+    if (reorderCategoriesForm) {
+        reorderCategoriesForm.addEventListener('submit', () => {
+            updateCategoryOrder();
+        });
+    }
+</script>
+{% endblock ScriptBlock %}

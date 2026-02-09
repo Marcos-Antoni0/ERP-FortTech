@@ -1,0 +1,238 @@
+{% load humanize %}
+<style>
+  #uni_modal .modal-footer {
+    display: none;
+  }
+
+  #uni_modal .modal-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .receipt-modal {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .thermal-shell {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .thermal-wrapper {
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    width: 64mm;
+    max-width: 100%;
+    padding: 0 2mm 4mm;
+    margin: 0 auto;
+    color: #000;
+    background: #fff;
+    box-sizing: border-box;
+    -webkit-font-smoothing: none;
+    text-rendering: optimizeSpeed;
+  }
+
+  .thermal-wrapper h6 {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .thermal-divider {
+    border: none;
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+  }
+
+  .thermal-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .thermal-items {
+    margin-top: 4px;
+  }
+
+  .thermal-items .item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+  }
+
+  .thermal-items .item-name {
+    flex: 1;
+    padding: 0 4px;
+  }
+
+  .thermal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: auto;
+  }
+
+  @page {
+    size: 64mm auto;
+    margin: 0;
+  }
+
+  @media print {
+    html,
+    body {
+      margin: 0;
+      width: 64mm;
+      background: #fff;
+      color: #000;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .thermal-wrapper {
+      box-shadow: none !important;
+    }
+
+    .thermal-actions {
+      display: none !important;
+    }
+  }
+</style>
+
+<div class="receipt-modal">
+  <div class="thermal-shell">
+  <div class="thermal-wrapper" id="catalog-order-receipt">
+      <div style="text-align: center; margin-bottom: 6px;">
+        <h6>{{ title }}</h6>
+        <div>{{ company.name|default:'Empresa' }}</div>
+        {% if company.cnpj %}
+        <div style="font-size: 11px;">CNPJ: {{ company.cnpj }}</div>
+        {% endif %}
+        <small>Pedido do Catálogo</small>
+      </div>
+
+      <hr class="thermal-divider" />
+
+      <div>
+        <div class="thermal-row">
+          <span>Data:</span>
+          <span>{{ order.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="thermal-row">
+          <span>Pedido:</span>
+          <span>{{ order.order_number }}</span>
+        </div>
+        <div class="thermal-row">
+          <span>Cliente:</span>
+          <span>{{ order.customer_name }}</span>
+        </div>
+        <div class="thermal-row" style="flex-direction: column; align-items: flex-start;">
+          <span>Endere&ccedil;o:</span>
+          <span>{{ order.delivery_address|default:'-' }}</span>
+        </div>
+        <div class="thermal-row">
+          <span>Pagamento:</span>
+          <span>{{ order.get_payment_method_display|default:'N/I' }}</span>
+        </div>
+        {% if order.customer_notes %}
+        <div class="thermal-row" style="flex-direction: column; align-items: flex-start; font-size: 11px;">
+          <span>Observa&ccedil;&otilde;es:</span>
+          <span>{{ order.customer_notes }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <hr class="thermal-divider" />
+
+      <div class="thermal-row" style="font-weight: bold;">
+        <span style="width: 12%;">Qtd</span>
+        <span style="flex: 1; text-align: left;">Item</span>
+      </div>
+
+      <div class="thermal-items">
+        {% for item in items %}
+        <div class="item">
+          <span style="width: 12%;">{{ item.quantity|floatformat:2 }}</span>
+          <span class="item-name">{{ item.name }}</span>
+        </div>
+        {% empty %}
+        <div class="item" style="justify-content: center;">
+          Nenhum item registrado.
+        </div>
+        {% endfor %}
+      </div>
+
+      <hr class="thermal-divider" />
+
+      <div class="thermal-row" style="font-weight: bold;">
+        <span>Total</span>
+        <span>R$ {{ order.total_value|floatformat:2 }}</span>
+      </div>
+
+      <div class="thermal-actions">
+        <button id="catalog-order-receipt-print" class="btn btn-light border rounded-0 btn-sm">
+          <i class="mdi mdi-printer"></i> Imprimir
+        </button>
+        <button type="button" class="btn btn-secondary border rounded-0 btn-sm" data-bs-dismiss="modal">
+          <i class="mdi mdi-close"></i> Fechar
+        </button>
+      </div>
+  </div>
+
+<script>
+  const catalogPrintBtn = document.getElementById('catalog-order-receipt-print');
+
+  function openCatalogPrintWindow() {
+    const content = document.getElementById('catalog-order-receipt').outerHTML;
+    const printWindow = window.open('', '_blank', 'width=320,height=600,menubar=no,toolbar=no');
+    if (!printWindow) return;
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <title>{{ title }}</title>
+          <style>
+            @page { size: 64mm auto; margin: 0; }
+            html, body {
+              margin: 0;
+              width: 64mm;
+              background: #fff;
+              color: #000;
+              font-family: 'Arial', 'Helvetica', sans-serif;
+              font-size: 13px;
+              font-weight: 600;
+              line-height: 1.4;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .thermal-wrapper { padding: 0 2mm 4mm; box-sizing: border-box; }
+            .thermal-divider { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+            .thermal-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+            .thermal-items .item { display: flex; justify-content: space-between; margin-bottom: 2px; }
+            .item-name { flex: 1; padding: 0 4px; }
+          </style>
+        </head>
+        <body>
+          ${content}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.onload = function () {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
+  }
+
+  if (catalogPrintBtn) {
+    catalogPrintBtn.addEventListener('click', openCatalogPrintWindow);
+  }
+</script>

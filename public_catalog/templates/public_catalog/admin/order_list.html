@@ -1,0 +1,96 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block pageContent %}
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Pedidos do Catálogo</h4>
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-md-2">
+                    <input type="text" name="order_number" class="form-control" placeholder="Número" value="{{ selected_order_number }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="customer" class="form-control" placeholder="Cliente" value="{{ selected_customer }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-control">
+                        <option value="">Status</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="start_date" class="form-control" value="{{ selected_start_date }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="end_date" class="form-control" value="{{ selected_end_date }}">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Cliente</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.customer_name }}</td>
+                            <td>{{ order.get_status_display }}</td>
+                            <td>R$ {{ order.total_value }}</td>
+                            <td>{{ order.created_at|date:'d/m/Y H:i' }}</td>
+                            <td>
+                                <a class="btn btn-sm btn-primary" href="{% url 'public-catalog-admin-order-detail' order.order_number %}">Detalhes</a>
+                                <button class="mdc-button mdc-button--raised p-1 icon-button filled-button--light mdc-ripple-upgraded view-cupom" type="button" data-order="{{ order.order_number }}" title="Cupom">
+                                    <i class="material-icons mdc-button__icon">receipt</i>
+                                </button>
+                                <form method="post" action="{% url 'public-catalog-admin-order-finalize' order.order_number %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="mdc-button mdc-button--raised p-1 icon-button filled-button--light mdc-ripple-upgraded" title="Finalizar pedido" onclick="return confirm('Deseja finalizar este pedido e gerar a venda?');">
+                                        <i class="material-icons mdc-button__icon">check_circle</i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'public-catalog-admin-order-delete' order.order_number %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja realmente excluir este pedido?');">
+                                        Excluir
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">Nenhum pedido encontrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}
+
+{% block ScriptBlock %}
+<script>
+    $(function() {
+        $('.view-cupom').click(function() {
+            const orderNumber = $(this).data('order');
+            const url = "{% url 'public-catalog-admin-order-receipt-modal' 'ORDER' %}".replace('ORDER', orderNumber);
+            uni_modal("Cupom do Pedido", url);
+        });
+    });
+</script>
+{% endblock ScriptBlock %}

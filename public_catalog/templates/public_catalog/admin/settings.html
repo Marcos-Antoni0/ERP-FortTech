@@ -1,0 +1,120 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block pageContent %}
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Configurações do Catálogo</h4>
+            <div class="mb-3">
+                <a class="btn btn-outline-primary" href="{% url 'public-catalog-admin-products' %}">
+                    Gerenciar produtos do catálogo
+                </a>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.catalog_title.label }}</label>
+                        {{ form.catalog_title }}
+                        {{ form.catalog_title.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.catalog_slug.label }}</label>
+                        {{ form.catalog_slug }}
+                        {{ form.catalog_slug.errors }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ form.catalog_description.label }}</label>
+                    {{ form.catalog_description }}
+                    {{ form.catalog_description.errors }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.whatsapp_number.label }}</label>
+                        {{ form.whatsapp_number }}
+                        {{ form.whatsapp_number.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.primary_color.label }}</label>
+                        {{ form.primary_color }}
+                        {{ form.primary_color.errors }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ form.logo.label }}</label>
+                    {{ form.logo }}
+                    {{ form.logo.errors }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ form.custom_message_template.label }}</label>
+                    {{ form.custom_message_template }}
+                    {{ form.custom_message_template.errors }}
+                </div>
+                <div class="form-check mb-2">
+                    {{ form.catalog_enabled }}
+                    <label class="form-check-label">{{ form.catalog_enabled.label }}</label>
+                    {{ form.catalog_enabled.errors }}
+                </div>
+                <div class="form-check mb-4">
+                    {{ form.display_prices }}
+                    <label class="form-check-label">{{ form.display_prices.label }}</label>
+                    {{ form.display_prices.errors }}
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-12 mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Preview do Catálogo</h5>
+            <div id="catalog-preview" class="p-3 border rounded">
+                <h4 id="preview-title">Seu Catálogo</h4>
+                <p id="preview-description">Descrição do catálogo.</p>
+                <a class="btn btn-primary" id="preview-action" href="{% url 'public-catalog-home' slug=form.instance.catalog_slug|default:'catalogo' %}" target="_blank" rel="noopener">
+                    Botão de Ação
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}
+
+{% block ScriptBlock %}
+<script>
+    const titleInput = document.getElementById('{{ form.catalog_title.id_for_label }}');
+    const descriptionInput = document.getElementById('{{ form.catalog_description.id_for_label }}');
+    const colorInput = document.getElementById('{{ form.primary_color.id_for_label }}');
+    const previewTitle = document.getElementById('preview-title');
+    const previewDescription = document.getElementById('preview-description');
+    const previewBox = document.getElementById('catalog-preview');
+    const previewAction = document.getElementById('preview-action');
+    const basePreviewUrl = '{% url "public-catalog-home" slug="__slug__" %}';
+
+    const updatePreview = () => {
+        const slugValue = (document.getElementById('{{ form.catalog_slug.id_for_label }}')?.value || '').trim();
+        previewTitle.textContent = titleInput.value || 'Seu Catálogo';
+        previewDescription.textContent = descriptionInput.value || 'Descrição do catálogo.';
+        previewBox.style.borderColor = colorInput.value || '#002d6c';
+        if (previewAction) {
+            const slug = slugValue || 'catalogo';
+            previewAction.href = basePreviewUrl.replace('__slug__', slug);
+        }
+    };
+
+    if (titleInput && descriptionInput && colorInput) {
+        titleInput.addEventListener('input', updatePreview);
+        descriptionInput.addEventListener('input', updatePreview);
+        colorInput.addEventListener('input', updatePreview);
+        const slugInput = document.getElementById('{{ form.catalog_slug.id_for_label }}');
+        if (slugInput) {
+            slugInput.addEventListener('input', updatePreview);
+        }
+        updatePreview();
+    }
+</script>
+{% endblock ScriptBlock %}

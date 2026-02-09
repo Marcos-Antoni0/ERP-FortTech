@@ -53,6 +53,13 @@
         </a>
       </div>
 
+      <div class="mdc-list-item mdc-drawer-item {% if current == 'public-catalog-admin-orders' or current == 'public-catalog-admin-order-detail' %}mdc-list-item--activated{% endif %}">
+        <a class="mdc-drawer-link" href="{% url 'public-catalog-admin-orders' %}">
+          <i class="material-icons mdc-list-item__start-detail mdc-drawer-item-icon">local_shipping</i>
+          <span class="mdc-drawer-label">Catálogo Delivery</span>
+        </a>
+      </div>
+
       <div class="mdc-list-item mdc-drawer-item {% if current == 'estoque' %}mdc-list-item--activated{% endif %}">
         <a class="mdc-drawer-link" href="{% url 'estoque' %}">
           <i class="material-icons mdc-list-item__start-detail mdc-drawer-item-icon">archive</i> Estoque
@@ -80,6 +87,12 @@
       <div class="mdc-list-item mdc-drawer-item {% if current == 'configuracoes-page' %}mdc-list-item--activated{% endif %}">
         <a class="mdc-drawer-link" href="{% url 'configuracoes-page' %}">
           <i class="material-icons mdc-list-item__start-detail mdc-drawer-item-icon">settings</i> Configurações
+        </a>
+      </div>
+
+      <div class="mdc-list-item mdc-drawer-item {% if current == 'configuracoes-page' %}mdc-list-item--activated{% endif %}">
+        <a class="mdc-drawer-link" href="{% url 'public-catalog-admin-settings' %}">
+          <i class="material-icons mdc-list-item__start-detail mdc-drawer-item-icon">settings</i> Admin catálogo
         </a>
       </div>
       
